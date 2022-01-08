@@ -5,13 +5,16 @@
 '''
 
 class Wordle():
-    def __init__(self, length):
+    def __init__(self, length, word=""):
         self.length = length
         self.guesses = []
         self.responses = []
         self.max_guesses = 6
         self.state = 'playing'
-        self.__gen_word()
+        if word == "":
+            self.__gen_word()
+        else:
+            self.word = word
         
     def __gen_word(self):
         self.word = 'slump'
