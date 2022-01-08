@@ -140,6 +140,28 @@ class WordleAI():
         
         return required_letters, forbidden_letters
     
+    def __choose_best_word(self, words):
+        letter_freqs = {}
+        for word in words:
+            for letter in word[0]:
+                letter_freqs[letter] = letter_freqs.get(letter, 0) + 1
+                
+        best_word = ""
+        best_score = -1
+        for word in words:
+            seen = set()
+            score = 0
+            for letter in word[0]:
+                if letter not in seen:
+                    score += letter_freqs[letter]
+                seen.add(letter)
+                
+            if score > best_score:
+                best_word = word
+                best_score = score
+        return best_word
+            
+    
     def make_guess(self):
         required_letters, forbidden_letters = self.__parse_responses()
             
@@ -147,13 +169,16 @@ class WordleAI():
         if len(valid_words) == 0:
             raise Exception('No word found')
         else:
-            return choice(valid_words)
+            return self.__choose_best_word(valid_words)
         
     def add_guess(self, guess):
         self.guesses.append(guess)
     
     def add_response(self, response):
         self.responses.append(response)
+    
+    def add_invalid_word(self, word):
+        self.words.remove(word)
             
 if __name__ == '__main__':
     word_list = 'unigram_freq_5.csv'

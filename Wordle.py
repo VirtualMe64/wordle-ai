@@ -4,20 +4,25 @@
 2 = correct letter in correct spot
 '''
 
+import random
+
+
 class Wordle():
-    def __init__(self, length, word=""):
+    def __init__(self, length, word="", max_guesses=6, word_list=None):
         self.length = length
         self.guesses = []
         self.responses = []
-        self.max_guesses = 6
+        self.max_guesses = max_guesses
         self.state = 'playing'
+        assert word_list != None or word != "", "Please provide word or wordlist"
+            
         if word == "":
-            self.__gen_word()
+            self.__gen_word(word_list)
         else:
             self.word = word
         
-    def __gen_word(self):
-        self.word = 'slump'
+    def __gen_word(self, word_list):
+        self.word = random.choice(word_list)
     
     def __update_state(self):
         if self.state == 'playing':
