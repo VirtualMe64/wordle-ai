@@ -43,7 +43,7 @@ class WordleAI():
             if count == 0:
                 continue
             
-            print(f'{letter}: {letter_obj}')
+            # print(f'{letter}: {letter_obj}')
             
             check_funcs.append(lambda word, letter=letter, count=count: word.count(letter) >= count)
             for position in letter_obj['correct_positions']:
@@ -97,15 +97,16 @@ class WordleAI():
                     
                 elif res == 1:
                     curr_info = required_letters[letter]
+                    if len(curr_info['correct_positions']) == 0 and len(curr_info['wrong_positions']) == 0:
+                        curr_info['count'] += 1
                     curr_info['wrong_positions'].add(idx)
                 
                 else:
                     assert res == 2
                     curr_info = required_letters[letter]
-                    if idx not in curr_info['correct_positions']: # this means the correct position letter isn't in the count
+                    if idx not in curr_info['correct_positions'] and len(curr_info['wrong_positions']) == 0: # this means the correct position letter isn't in the count
                         curr_info['count'] += 1
                     curr_info['correct_positions'].add(idx)
-                    curr_info['wrong_positions'].clear()
                     
             
         guess = self.search_word_list(required_letters, forbidden_letters)
@@ -125,11 +126,12 @@ if __name__ == '__main__':
     ai = WordleAI(5, word_list)
     
     # word is slump
-    ai.guesses = ['about', 'music', 'drums']
+    ai.guesses = ['about', 'music', 'drums', 'plump']
     ai.responses = [
         [0, 0, 0, 1, 0],
         [1, 1, 1, 0, 0],
-        [0, 0, 2, 2, 1]
+        [0, 0, 2, 2, 1],
+        [1, 2, 2, 2, 2]
     ]
     
     guess = ai.make_guess()

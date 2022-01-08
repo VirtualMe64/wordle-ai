@@ -15,7 +15,7 @@ def external_game():
         if response == [2] * ai.length:
             done == True
     
-def internal_game(word):
+def internal_game(word, verbose=False):
     turns = 0
     ai = WordleAI(5, 'unigram_freq_5.csv')
     game = Wordle(5, word=word)
@@ -23,18 +23,21 @@ def internal_game(word):
     while game.playing():
         guess = ai.make_guess()
         turns += 1
-        print(guess)
         response = game.make_guess(guess[0])
-        print(game.format_responses())
+        if verbose:
+            print(guess)
+            print(game.format_responses())
         ai.add_guess(guess[0])
         ai.add_response(response)
     
-    print(game.state)
+    if game.state == 'lost':
+        turns = -1
+    
+    if verbose:
+        print(game.state)
     return turns
     
 if __name__ == '__main__':
-    internal_game('swirl')
-    '''
     import csv
     import random
     
@@ -48,13 +51,11 @@ if __name__ == '__main__':
             words.append((word, freq))
     
     results = {}
-    chosen_words = random.sample(words, 100)
+    chosen_words = random.sample(words, 1000)
     for word in chosen_words:
-        print('-' * 20)
-        print(word)
         turns = internal_game(word[0])
-        results['word'] = word[0]
+        results[word[0]] = turns
         
     print(results)
-    print(f'Avg: {sum(results.values()) / len(results)}')
-    '''
+    print(f'Avg: {sum([x for x in results.values() if x != -1]) / len(results)}')
+    print(f'Success %: {sum([1 for x in results.values() if x != -1]) / len(results)}')
