@@ -46,17 +46,22 @@ class Wordle():
         assert len(word) == self.length
         
         self.guesses.append(word)
-        response = []
+        response = [0] * self.length
+        found_letters = {}
         
+        # correct spot and letter scan
         for idx, letter in enumerate(word):
-            if letter in self.word: # correct letter
-                if self.word[idx] == letter: # correct spot
-                    response.append(2)
-                else: # wrong spot
-                    response.append(1)
-            else:
-                response.append(0)    
-            
+            if self.word[idx] == letter: # correct letter in correct spot
+                response[idx] = 2
+                found_letters[letter] = found_letters.get(letter, 0) + 1
+        
+        # correct letter scan
+        for idx, letter in enumerate(word):
+            if letter in self.word and self.word[idx] != letter: # correct letter in wrong spot
+                if found_letters.get(letter, 0) < self.word.count(letter):
+                    found_letters[letter] = found_letters.get(letter, 0) + 1
+                    response[idx] = 1
+                    
         self.responses.append(response)
         self.__update_state()
         
@@ -67,7 +72,7 @@ class Wordle():
         return self.state == 'playing'
 
 if __name__ == '__main__':
-    wordle = Wordle(5)
+    wordle = Wordle(5, 'slums')
     
     while wordle.playing():
         guess = input('Enter a word: ').lower()

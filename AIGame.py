@@ -1,3 +1,4 @@
+from sys import intern
 from WordleAI import WordleAI
 from Wordle import Wordle
 
@@ -41,21 +42,28 @@ if __name__ == '__main__':
     import csv
     import random
     
-    with open('unigram_freq_5.csv', 'r') as open_file:
-        data = csv.reader(open_file)
-        next(data)
-        words = []
-        for row in data:
-            word = row[0]
-            freq = row[1]
-            words.append((word, freq))
+    n = 0
     
-    results = {}
-    chosen_words = random.sample(words, 1000)
-    for word in chosen_words:
-        turns = internal_game(word[0])
-        results[word[0]] = turns
+    if n == 0:
+        with open('unigram_freq_5.csv', 'r') as open_file:
+            data = csv.reader(open_file)
+            next(data)
+            words = []
+            for row in data:
+                word = row[0]
+                freq = row[1]
+                words.append((word, freq))
         
-    print(results)
-    print(f'Avg: {sum([x for x in results.values() if x != -1]) / len(results)}')
-    print(f'Success %: {sum([1 for x in results.values() if x != -1]) / len(results)}')
+        results = {}
+        chosen_words = random.sample(words, 100)
+        for word in chosen_words:
+            turns = internal_game(word[0], verbose=False)
+            results[word[0]] = turns
+            
+        print(results)
+        print(f'Avg: {sum([x for x in results.values() if x != -1]) / len(results)}')
+        print(f'Success %: {sum([1 for x in results.values() if x != -1]) / len(results)}')
+    elif n == 1:
+        print(internal_game('slums', verbose=True))
+    elif n == 2:
+        external_game()

@@ -1,4 +1,5 @@
 import csv
+from random import choice
 
 class WordleAI():
     def __init__(self, length, word_list):
@@ -26,6 +27,7 @@ class WordleAI():
         for letter in 'abcdefghijklmnopqrstuvwxyz':
             out[letter] = {
                 'count': 0,
+                'exact_count': False,
                 'correct_positions': set(),
                 'wrong_positions': set()
             }
@@ -45,7 +47,11 @@ class WordleAI():
             
             # print(f'{letter}: {letter_obj}')
             
-            check_funcs.append(lambda word, letter=letter, count=count: word.count(letter) >= count)
+            if letter_obj['exact_count']:
+                check_funcs.append(lambda word, letter=letter, count=count: word.count(letter) == count)
+            else:
+                check_funcs.append(lambda word, letter=letter, count=count: word.count(letter) >= count)
+                
             for position in letter_obj['correct_positions']:
                 check_funcs.append(lambda word, letter=letter, position=position: word[position] == letter)
             for position in letter_obj['wrong_positions']:
@@ -61,15 +67,19 @@ class WordleAI():
         check_funcs = self.__gen_check_funcs(required_letters, forbidden_letters)
         
         for word in self.words:
-            if all([check_func(word[0]) for check_func in check_funcs]):
-                return word
-        
-        return None
+            valid = True
+            for check_func in check_funcs:
+                if not check_func(word[0]):
+                    valid = False
+                    break
+            if valid:
+                yield word
 
     """
     Required letters: object of form [
         latter: {
             count: int
+            exact_count: bool
             correct_positions: set(int, int, ...)
             wrong_positions: set(int, int, ...)
         }
@@ -83,7 +93,7 @@ class WordleAI():
     1 = correct letter wrong spot
     2 = correct letter in correct spot
     """
-    def make_guess(self):
+    def __parse_responses(self):
         required_letters = self.__construct_letter_dict()
         forbidden_letters = set()
         
@@ -93,27 +103,51 @@ class WordleAI():
                 letter = guess[idx]
                 
                 if res == 0:
-                    forbidden_letters.add(letter)
+                    if guess.count(letter) > 1: # horrible hack
+                        num = 0
+                        for i, l in enumerate(guess):
+                            if l == letter:
+                                num += 0 if response[i] == 0 else 1
+                                
+                        if num == 0:
+                            forbidden_letters.add(letter)
+                        else:
+                            required_letters[letter]['wrong_positions'].add(idx)
+                            required_letters[letter]['exact_count'] = True
+                            required_letters[letter]['count'] = num
+                            
+                    else:
+                        forbidden_letters.add(letter)
                     
                 elif res == 1:
                     curr_info = required_letters[letter]
                     if len(curr_info['correct_positions']) == 0 and len(curr_info['wrong_positions']) == 0:
-                        curr_info['count'] += 1
+                        if not curr_info['exact_count']:
+                            curr_info['count'] += 1
                     curr_info['wrong_positions'].add(idx)
+                    if letter in forbidden_letters:
+                        forbidden_letters.remove(letter)
                 
                 else:
                     assert res == 2
                     curr_info = required_letters[letter]
                     if idx not in curr_info['correct_positions'] and len(curr_info['wrong_positions']) == 0: # this means the correct position letter isn't in the count
-                        curr_info['count'] += 1
+                        if not curr_info['exact_count']:
+                            curr_info['count'] += 1
                     curr_info['correct_positions'].add(idx)
-                    
+                    if letter in forbidden_letters:
+                        forbidden_letters.remove(letter)
+        
+        return required_letters, forbidden_letters
+    
+    def make_guess(self):
+        required_letters, forbidden_letters = self.__parse_responses()
             
-        guess = self.search_word_list(required_letters, forbidden_letters)
-        if guess == None:
+        valid_words = [x for x in self.search_word_list(required_letters, forbidden_letters)]
+        if len(valid_words) == 0:
             raise Exception('No word found')
         else:
-            return guess
+            return choice(valid_words)
         
     def add_guess(self, guess):
         self.guesses.append(guess)
