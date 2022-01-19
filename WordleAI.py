@@ -1,24 +1,16 @@
-import csv
 from random import choice
+import GetWords
 
 class WordleAI():
-    def __init__(self, length, word_list):
+    def __init__(self, length):
         self.length = length
         self.guesses = []
         self.responses = []
-        self.__load_word_list(word_list)
+        self.__load_word_list()
 
-    def __load_word_list(self, word_list):
-        with open(word_list, 'r') as open_file:
-            data = csv.reader(open_file)
-            next(data)
-            words = []
-            for row in data:
-                word = row[0]
-                freq = row[1]
-                words.append((word, freq))
-        
-        self.words = words
+    def __load_word_list(self):
+        self.words = GetWords.get_wordlist()
+        self.valid_guesses = GetWords.get_valid_guesses()
     
     def __construct_letter_dict(self):
         # loop over all lowercase letters
@@ -69,7 +61,7 @@ class WordleAI():
         for word in self.words:
             valid = True
             for check_func in check_funcs:
-                if not check_func(word[0]):
+                if not check_func(word):
                     valid = False
                     break
             if valid:
@@ -143,15 +135,15 @@ class WordleAI():
     def __choose_best_word(self, words):
         letter_freqs = {}
         for word in words:
-            for letter in word[0]:
+            for letter in word:
                 letter_freqs[letter] = letter_freqs.get(letter, 0) + 1
-                
+        
         best_word = ""
         best_score = -1
         for word in words:
             seen = set()
             score = 0
-            for letter in word[0]:
+            for letter in word:
                 if letter not in seen:
                     score += letter_freqs[letter]
                 seen.add(letter)
@@ -166,6 +158,7 @@ class WordleAI():
         required_letters, forbidden_letters = self.__parse_responses()
             
         valid_words = [x for x in self.search_word_list(required_letters, forbidden_letters)]
+        print(len(valid_words))
         if len(valid_words) == 0:
             raise Exception('No word found')
         else:
@@ -181,17 +174,11 @@ class WordleAI():
         self.words.remove(word)
             
 if __name__ == '__main__':
-    word_list = 'unigram_freq_5.csv'
-    ai = WordleAI(5, word_list)
+    ai = WordleAI(5)
     
     # word is slump
-    ai.guesses = ['about', 'music', 'drums', 'plump']
-    ai.responses = [
-        [0, 0, 0, 1, 0],
-        [1, 1, 1, 0, 0],
-        [0, 0, 2, 2, 1],
-        [1, 2, 2, 2, 2]
-    ]
+    ai.guesses = []
+    ai.responses = []
     
     guess = ai.make_guess()
     print(guess)

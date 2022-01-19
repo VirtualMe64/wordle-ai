@@ -5,25 +5,34 @@
 '''
 
 import random
-
+import GetWords
 
 class Wordle():
-    def __init__(self, length, word="", max_guesses=6, word_list=None):
+    def __init__(self, length, word="", max_guesses=6):
         self.length = length
         self.guesses = []
         self.responses = []
         self.max_guesses = max_guesses
         self.state = 'playing'
-        assert word_list != None or word != "", "Please provide word or wordlist"
-            
-        if word == "":
-            self.__gen_word(word_list)
-        else:
-            self.word = word
         
-    def __gen_word(self, word_list):
-        self.word = random.choice(word_list)
-    
+        self.__load_word_lists()
+        
+        if word == "":
+            self.__gen_word()
+        else:
+            if word not in self.wordlist:
+                print('invalid word')
+                self.__gen_word
+            else:
+                self.word = word
+        
+    def __gen_word(self):
+        self.word = random.choice(self.wordlist)
+
+    def __load_word_lists(self):
+        self.valid_guesses = GetWords.get_valid_guesses()
+        self.wordlist = GetWords.get_wordlist()
+        
     def __update_state(self):
         if self.state == 'playing':
             if self.responses[-1] == [2] * 5:
@@ -48,7 +57,10 @@ class Wordle():
         return out
     
     def make_guess(self, word):
-        assert len(word) == self.length
+        word = word.lower()
+        
+        assert len(word) == self.length, 'Invalid guess length'
+        assert word in self.valid_guesses, 'Invalid guess'
         
         self.guesses.append(word)
         response = [0] * self.length
@@ -77,7 +89,7 @@ class Wordle():
         return self.state == 'playing'
 
 if __name__ == '__main__':
-    wordle = Wordle(5, 'slums')
+    wordle = Wordle(5, 'slump')
     
     while wordle.playing():
         guess = input('Enter a word: ').lower()

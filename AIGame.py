@@ -1,9 +1,10 @@
 from sys import intern
 from WordleAI import WordleAI
 from Wordle import Wordle
+from GetWords import get_wordlist
 
 def external_game():
-    ai = WordleAI(5, 'unigram_freq_5.csv')
+    ai = WordleAI(5)
 
     done = False
 
@@ -15,39 +16,30 @@ def external_game():
             ai.add_invalid_word(guess)
             continue
         response = [int(x) for x in response]
-        ai.add_guess(guess[0])
+        ai.add_guess(guess)
         ai.add_response(response)
         if response == [2] * ai.length:
             done == True
     
 def internal_game(word, verbose=False):
     turns = 0
-    ai = WordleAI(5, 'unigram_freq_5.csv')
+    ai = WordleAI(5)
     game = Wordle(5, word=word, max_guesses=20)
     
     while game.playing():
         guess = ai.make_guess()
         turns += 1
-        response = game.make_guess(guess[0])
+        response = game.make_guess(guess)
         if verbose:
             print(guess)
             print(game.format_responses())
-        ai.add_guess(guess[0])
+        ai.add_guess(guess)
         ai.add_response(response)
 
     return turns
 
 def challenge_ai():
-    words = []
-    with open('unigram_freq_5.csv', 'r') as open_file:
-        data = csv.reader(open_file)
-        next(data)
-        for row in data:
-            word = row[0]
-            freq = row[1]
-            words.append(word)
-            
-    wordle = Wordle(5, word_list=words)
+    wordle = Wordle(5)
     
     turns = 0
     
@@ -65,33 +57,28 @@ def challenge_ai():
     
 
 if __name__ == '__main__':
-    import csv
     import random
     
-    n = 0
+    n = 2
     
     if n == 0:
-        with open('unigram_freq_5.csv', 'r') as open_file:
-            data = csv.reader(open_file)
-            next(data)
-            words = []
-            for row in data:
-                word = row[0]
-                freq = row[1]
-                words.append((word, freq))
-        
         results = {}
+        words = get_wordlist()
         chosen_words = random.sample(words, 1000)
         for word in chosen_words:
-            turns = internal_game(word[0], verbose=False)
-            results[word[0]] = turns
+            turns = internal_game(word, verbose=False)
+            results[word] = turns
             
         print(results)
         print(f'Avg: {sum(results.values()) / len(results)}')
         print(f'Success %: {sum([1 for x in results.values() if x <= 6]) / len(results)}')
+        
     elif n == 1:
-        print(internal_game('slums', verbose=True))
+        word = input('Enter a word: ').lower()
+        print(internal_game(word, verbose=True))
+        
     elif n == 2:
         external_game()
+    
     elif n == 3:
         challenge_ai()
